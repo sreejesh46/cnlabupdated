@@ -1,71 +1,58 @@
-/*
-First run server.c by gcc server.c -o server
-then run server by ./server
-After that start client by  gcc client.c -o client
-then run client by ./client
-*/
-#include<stdio.h>
-#include<string.h>
-#include<sys/socket.h>
-#include<stdlib.h>
-#include<netdb.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-int main()
-{
-    int serversocket,clientsocket,port; //clientsocket is the socket descriptor , port is the port number
-    struct sockaddr_in serveraddr,clientaddr; //creating a structure of type sockaddr_in for server
-    socklen_t len; //creating a variable to store the length of the server address 
-    char message[50]; //
-    struct serveraddr; //creating a structure of type sockaddr_in for server
+int main() {
+    int socket_desc, client_sock, client_size;
+    struct sockaddr_in server_addr, client_addr;
+    char client_message[2000], server_message[2000];
 
+    memset(client_message, '\0', sizeof(client_message));
+    memset(server_message, '\0', sizeof(server_message));
 
-    serversocket=socket(AF_INET,SOCK_STREAM,0); //creating a socket
-    bzero((char*)&serveraddr,sizeof(serveraddr));//initializing the server address to zero
-    serveraddr.sin_family=AF_INET;//setting the family of the server address to AF_INET
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+    if (socket_desc < 0) {
+        perror("\nError creating socket");
+        return -1;
+    }
 
-    printf("Enter the port number ");
-    scanf("%d",&port);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(2000);
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    serveraddr.sin_port=htons(port); //setting the port number of the server address to port
-    serveraddr.sin_addr.s_addr=INADDR_ANY; //setting the IP address of the server address to INADDR_ANY
-    bind(serversocket,(struct sockaddr*)&serveraddr,sizeof(serveraddr)); //binding the server address to the socket
-    bzero((char*)&clientaddr,sizeof(clientaddr)); //initializing the client address to zero
-    len=sizeof(clientaddr); //storing the length of the client address in len
-    listen(serversocket,5); //listening to the socket, 5 is the number of clients that can connect to the server
+    if(bind(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0 ||
+       listen(socket_desc, 1) < 0) {
+        perror("\nBinding or listening error");
+        return -1;
+    }
 
-    printf("\nWaiting for client connection\n"); 
-    printf("\nhai:");
-    clientsocket=accept(serversocket,(struct sockaddr*)&clientaddr,&len);//accepting the client connection
+    printf("\nListening for incoming connections...");
 
-    printf("\nClient connectivity received.\n");
-    printf("\nReading message from the client.\n");
-    read(clientsocket,message,sizeof(message));//reading the message from the client
+    client_size = sizeof(client_addr);
+    client_sock = accept(socket_desc, (struct sockaddr*)&client_addr, &client_size);
+    if(client_sock < 0) {
+        perror("\nCan't connect to the client");
+        return -1;
+    }
 
-    printf("\nThe client has sent.%s",message);
-    printf("\nSending message to the client.\n");
-    write(clientsocket,"YOUR MESSAGE RECEIVED.",sizeof("YOUR MESSAGE RECEIVED."));//sending the message to the client
-    
-    close(clientsocket);//closing the client socket
-    close(serversocket);//closing the server socket
+    printf("\nConnected at IP: %s and port %i\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
+    if(recv(client_sock, client_message, sizeof(client_message), 0) < 0) {
+        perror("\nError receiving message");
+        return -1;
+    }
+    printf("\nMsg from client: %s\n", client_message);
 
+    strcpy(server_message, "This is server's message");
+
+    if(send(client_sock, server_message, strlen(server_message), 0) < 0) {
+        perror("\nError sending message");
+        return -1;
+    }
+
+    close(client_sock);
+    close(socket_desc);
+
+    return 0;
 }
-
-/*
-OUTPUT
-s6d2@user-HP-280-G3-MT:~/Networking-Lab-S6/Socket-Programming/TCP$ gcc server.c -o server
-s6d2@user-HP-280-G3-MT:~/Networking-Lab-S6/Socket-Programming/TCP$ ./server
-Enter the port number 6000
-
-Waiting for client connection
-
-hai:
-Client connectivity received.
-
-Reading message from the client.
-
-The client has sent.HI,IAM CLIENT...
-Sending message to the client.
-s6d2@user-HP-280-G3-MT:~/Networking-Lab-S6/Socket-Programming/TCP$ ^C
-*/
