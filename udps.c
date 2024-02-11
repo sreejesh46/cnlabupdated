@@ -1,77 +1,103 @@
-// server program for udp connection 
-#include <stdio.h> 
-#include <strings.h> 
-#include <sys/types.h> 
-#include <arpa/inet.h> 
-#include <sys/socket.h> 
-#include<netinet/in.h> 
-#define PORT 5000 
-#define MAXLINE 1000 
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+int main(void)
+{
+    int socket_desc;
+    struct sockaddr_in server_addr, client_addr;
+    char server_message[2000], client_message[2000];
+    int client_struct_length = sizeof(client_addr);
+    // Clean buffers:
+    memset(server_message, '\0', sizeof(server_message));
+    memset(client_message, '\0', sizeof(client_message));
+    // Create UDP socket:
+    socket_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (socket_desc < 0)
+    {
+        printf("Error while creating socket\n");
+        return -1;
+    }
+    printf("Socket created successfully\n");
+    // Set port and IP:
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(2000);
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Bind to the set port and IP:
+    if (bind(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+        printf("Couldn't bind to the port\n");
+        return -1;
+    }
+    printf("Done with binding\n");
+    printf("Listening for incoming messages...\n\n");
+    // Receive client's message:
+    if (recvfrom(socket_desc, client_message, sizeof(client_message), 0,
+                 (struct sockaddr *)&client_addr, &client_struct_length) < 0)
+    {
+        printf("Couldn't receive\n");
+        return -1;
+    }
+    printf("Received message from IP: %s and port: %i\n",
+           inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+    printf("Msg from client: %s\n", client_message);
+    // Respond to client:
+    strcpy(server_message, client_message);
+    if (sendto(socket_desc, server_message, strlen(server_message), 0,
+               (struct sockaddr *)&client_addr, client_struct_length) < 0)
+    {
+        printf("Can't send\n");
+        return -1;
+    }
+    // Close the socket:
+    close(socket_desc);
+    return 0;
+}
 
-// Driver code 
-int main() 
-{ 
-	char buffer[100]; 
-	char *message = "Hello Client"; 
-	int listenfd, len; 
-	struct sockaddr_in servaddr, cliaddr; 
-	bzero(&servaddr, sizeof(servaddr)); 
+//ALOGORITHM
+// */ 1. Declare variables:
+//     - socket_desc: integer to store the socket descriptor
+//     - server_addr: structure to store server address information
+//     - client_addr: structure to store client address information
+//     - server_message: character array to store server message
+//     - client_message: character array to store client message
+//     - client_struct_length: integer to store the length of the client address structure
 
-	// Create a UDP Socket 
-	listenfd = socket(AF_INET, SOCK_DGRAM, 0);		 
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	servaddr.sin_port = htons(PORT); 
-	servaddr.sin_family = AF_INET; 
+// 2. Initialize server_message and client_message arrays with null characters.
 
-	// bind server address to socket descriptor 
-	bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr)); 
-	
-	//receive the datagram 
-	len = sizeof(cliaddr); 
-	int n = recvfrom(listenfd, buffer, sizeof(buffer), 
-			0, (struct sockaddr*)&cliaddr,&len); //receive message from server 
-	buffer[n] = '\0'; 
-	puts(buffer); 
-		
-	// send the response 
-	sendto(listenfd, message, MAXLINE, 0, 
-		(struct sockaddr*)&cliaddr, sizeof(cliaddr)); 
-} 
-/*
-1. Initialize variables:
-    - buffer[100]: to store incoming data
-    - message: a string to send to the client
-    - listenfd: socket file descriptor for listening
-    - servaddr: structure to store server address information
-    - cliaddr: structure to store client address information
-    - len: variable to store the length of client address
-    - PORT: constant integer representing the port number
-    - MAXLINE: constant integer representing the maximum length of a message
+// 3. Create a UDP socket:
+//     - socket_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
 
-2. Clear the servaddr structure using bzero().
+// 4. Check if the socket creation was successful:
+//     - If socket_desc < 0, print an error message and return -1.
 
-3. Create a UDP socket:
-    listenfd = socket(AF_INET, SOCK_DGRAM, 0)
+// 5. Print a success message indicating the socket creation.
 
-4. Set up the server address:
-    servaddr.sin_family = AF_INET
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY)
-    servaddr.sin_port = htons(PORT)
+// 6. Set up the server address:
+//     - server_addr.sin_family = AF_INET
+//     - server_addr.sin_port = htons(2000)
+//     - server_addr.sin_addr.s_addr = inet_addr("127.0.0.1")
 
-5. Bind the server address to the socket descriptor:
-    bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr))
+// 7. Bind to the set port and IP:
+//     - if bind(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0, print an error message and return -1.
 
-6. Receive the datagram from the client:
-    len = sizeof(cliaddr)
-    n = recvfrom(listenfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&cliaddr, &len)
-    buffer[n] = '\0'
+// 8. Print a success message indicating the binding.
 
-7. Print the received message:
-    puts(buffer)
+// 9. Print a message indicating that the server is listening for incoming messages.
 
-8. Send the response message (message) to the client:
-    sendto(listenfd, message, MAXLINE, 0, (struct sockaddr*)&cliaddr, sizeof(cliaddr))
+// 10. Receive a message from the client:
+//     - if recvfrom(socket_desc, client_message, sizeof(client_message), 0, (struct sockaddr *)&client_addr, &client_struct_length) < 0, print an error message and return -1.
 
-9. Close the socket:
-    close(listenfd)
-*/
+// 11. Print the IP address and port number of the client.
+// 12. Print the message received from the client.
+
+// 13. Copy the client message to the server message.
+
+// 14. Respond to the client by sending the server message:
+//     - if sendto(socket_desc, server_message, strlen(server_message), 0, (struct sockaddr *)&client_addr, client_struct_length) < 0, print an error message and return -1.
+
+// 15. Close the socket:
+//     - close(socket_desc)
+
+// 16. Exit the program with return code 0.
+
