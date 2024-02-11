@@ -1,6 +1,3 @@
-Here's the beautified version of the code with proper indentation and spacing:
-
-```c
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
