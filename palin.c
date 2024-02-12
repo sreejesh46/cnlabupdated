@@ -48,27 +48,39 @@ int main() {
 
 
 /*ALGORITHM
-1. Create a TCP socket (s).
-2. Configure the server address:
-    - Set the address family to AF_INET.
-    - Set the port to 2000 (converted to network byte order).
-    - Set the IP address to localhost (127.0.0.1).
-3. Bind the socket to the server address.
-4. Set the socket to listen for incoming connections, with a backlog queue size of 1.
-5. Accept a connection from a client, creating a new socket (sock) for communication.
-6. Repeat indefinitely:
-    7. Receive a string from the client on the socket (sock).
-    8. Print the received string.
-    9. Check if the received string is empty:
-        - If it is empty, set the flag to indicate a palindrome (flag = 1).
-        - Otherwise, iterate through the string to check if it's a palindrome:
-            - Initialize left pointer to the beginning of the string and right pointer to the end.
-            - While left < right and flag is true:
-                - If characters at left and right positions are not equal, set flag to 0 (indicating not a palindrome).
-                - Otherwise, move left pointer to the right and right pointer to the left.
-    10. Send the flag back to the client indicating whether the received string is a palindrome or not.
-    11. Break the loop (terminate the server after processing one request).
-7. Close the communication socket (sock).
-8. Close the listening socket (s).
-9. Exit the program.
+1. Declare variables:
+    - s: integer to store the socket descriptor
+    - n: integer to store the size of the client address structure
+    - sock: integer to store the client socket descriptor
+    - flag: integer to store the result of palindrome check
+    - b1[20]: character array to store received string
+2. Create a TCP socket:
+    - s = socket(AF_INET, SOCK_STREAM, 0)
+3. Set up the server address:
+    - Initialize the server structure server.sin_family = AF_INET
+    - Set the port to 2000 (converted to network byte order): server.sin_port = htons(2000)
+    - Set the IP address to localhost: server.sin_addr.s_addr = inet_addr("127.0.0.1")
+4. Bind the socket to the server address:
+    - bind(s, (struct sockaddr*)&server, sizeof(server))
+5. Listen for incoming connections:
+    - listen(s, 1)
+6. Accept incoming connection requests from clients:
+    - sock = accept(s, (struct sockaddr*)&client, &n)
+7. Receive a string from the client:
+    - recv(sock, b1, sizeof(b1), 0)
+8. Print the received string:
+    - Print "The string received is: " followed by b1.
+9. Check if the received string is a palindrome:
+    - If the length of the string is 0, set flag to 1.
+    - Otherwise, initialize left to 0 and right to strlen(b1) - 1. Set flag to 1.
+    - Iterate while left is less than right and flag is true:
+        - If b1[left] is not equal to b1[right], set flag to 0.
+        - Otherwise, increment left and decrement right.
+10. Send the flag (result of palindrome check) to the client:
+    - send(sock, &flag, sizeof(int), 0)
+11. Close the client socket:
+    - close(sock)
+12. Close the server socket:
+    - close(s)
+13. Exit the program with return code 0.
 */
