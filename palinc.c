@@ -32,19 +32,32 @@ int main() {
 }
 
 /* ALOGRITHM
-1. Create a TCP socket (s).
-2. Configure the server address:
-    - Set the address family to AF_INET.
-    - Set the port to 2000 (converted to network byte order).
-    - Set the IP address to localhost (127.0.0.1).
-3. Connect to the server using the configured server address.
-4. Prompt the user to enter a string to check for palindrome.
-5. Read the string input from the user.
-6. Send the string to the server for palindrome checking.
-7. Receive the result (flag) from the server.
-8. Check the flag received from the server:
-    - If the flag is 1, print "The string is a Palindrome."
-    - Otherwise, print "The string is not a palindrome."
-9. Close the socket.
-10. Exit the program.
+1. Declare variables:
+    - s: integer to store the socket descriptor
+    - flag: integer to store the result of palindrome check
+    - buffer[20]: character array to store the user input string
+2. Create a TCP socket:
+    - s = socket(AF_INET, SOCK_STREAM, 0)
+3. Set up the server address:
+    - Initialize the client structure client.sin_family = AF_INET
+    - Set the port to 2000 (converted to network byte order): client.sin_port = htons(2000)
+    - Set the IP address to localhost: client.sin_addr.s_addr = inet_addr("127.0.0.1")
+4. Connect to the server:
+    - connect(s, (struct sockaddr*)&client, sizeof(client))
+5. Prompt the user to enter a string to check palindrome:
+    - Print "Enter a string to check palindrome: "
+6. Read the user input string:
+    - scanf("%s", buffer)
+7. Print the client's input string:
+    - Print "Client: " followed by buffer
+8. Send the user input string to the server:
+    - send(s, buffer, sizeof(buffer), 0)
+9. Receive the result of palindrome check from the server:
+    - recv(s, &flag, sizeof(int), 0)
+10. Check the value of the flag:
+    - If flag is equal to 1, print "Server: The string is a Palindrome."
+    - Otherwise, print "Server: The string is not a palindrome."
+11. Close the socket:
+    - close(s)
+12. Exit the program with return code 0.
 */
